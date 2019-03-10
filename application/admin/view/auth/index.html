@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>无标题文档</title>
+    <link href="{:config('static_admin')}/css/style.css" rel="stylesheet" type="text/css" />
+    <link href="{:config('static_admin')}/css/page.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="{:config('static_admin')}/js/jquery.js"></script>
+    <script type="text/javascript" src="/static/layer/layer.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $(".click").click(function() {
+            $(".tip").fadeIn(200);
+        });
+
+        $(".tiptop a").click(function() {
+            $(".tip").fadeOut(200);
+        });
+
+        $(".sure").click(function() {
+            $(".tip").fadeOut(100);
+        });
+
+        $(".cancel").click(function() {
+            $(".tip").fadeOut(100);
+        });
+
+    });
+    </script>
+</head>
+
+<body>
+    <div class="place">
+        <span>位置：</span>
+        <ul class="placeul">
+            <li><a href="#">首页</a></li>
+            <li><a href="#">数据表</a></li>
+            <li><a href="#">基本内容</a></li>
+        </ul>
+    </div>
+    <div class="rightinfo">
+        <div class="tools">
+            <ul class="toolbar">
+                <li><span><img src="{:config('static_admin')}/images/t01.png" /></span>添加</li>
+                <li><span><img src="{:config('static_admin')}/images/t02.png" /></span>修改</li>
+                <li><span><img src="{:config('static_admin')}/images/t03.png" /></span>删除</li>
+                <li><span><img src="{:config('static_admin')}/images/t04.png" /></span>统计</li>
+            </ul>
+        </div>
+        <table class="tablelist">
+            <thead>
+                <tr>
+                    <th>
+                        <input name="" type="checkbox" value="" id="checkAll" />
+                    </th>
+                    <th>权限名称</th>
+                    <th>父权限</th>
+                    <th>控制器名</th>
+                    <th>方法名</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {foreach name="auths" item="v"}
+                <tr>
+                    <td>
+                        <input name="" type="checkbox" value="" />
+                    </td>
+                    <td>{:str_repeat('&nbsp;&nbsp;',$v['level']*2)}{$v['auth_name']}</td>
+                    <td>{$v['p_name']?:'顶级权限'}</td>
+                    <td>{$v['auth_c']}</td>
+                    <td>{$v['auth_a']}</td>
+                    <td>
+                        <a href="{:url('/admin/auth/upd',['auth_id'=>$v['auth_id']])}" class="tablelink">编辑</a> 
+                        <a href="javascript:;" auth_id="{$v['auth_id']}" class="tablelink delAuth"> 删除</a>
+                    </td>
+                </tr>
+                {/foreach}
+                
+            </tbody>
+        </table>
+
+        <!-- 分页页码 -->
+        <div class="pagination">
+        </div>
+
+
+
+        <div class="tip">
+            <div class="tiptop"><span>提示信息</span>
+                <a></a>
+            </div>
+            <div class="tipinfo">
+                <span><img src="{:config('static_admin')}/images/ticon.png" /></span>
+                <div class="tipright">
+                    <p>是否确认对信息的修改 ？</p>
+                    <cite>如果是请点击确定按钮 ，否则请点取消。</cite>
+                </div>
+            </div>
+            <div class="tipbtn">
+                <input name="" type="button" class="sure" value="确定" />&nbsp;
+                <input name="" type="button" class="cancel" value="取消" />
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        //ajax无刷新删除权限
+        $('.delAuth').click(function(){
+            if(!confirm('确认删除')){
+                return ; //结束下面代码的执行（即退出当前函数）
+            }
+            var _self = $(this); // 引用当前元素的对象，为了在内部子函数中可以引用到
+            //获取自定义属性值
+            var auth_id = _self.attr('auth_id');
+            console.log($(this));
+            //发送ajax请求
+            $.get("{:url('/admin/auth/ajaxDel')}",{"auth_id":auth_id},function(res){
+                // console.log($(this)); //这里的this是ajax
+               console.log(res);
+                if(res.code == 200){
+                    //删除成功，删除当前tr行
+                    _self.parent().parent().remove();
+                }
+                //提示层
+                layer.msg(res.message,{
+                    time:1000
+                });
+
+            },'json')
+
+        });
+        
+        $('.tablelist tbody tr:odd').addClass('odd');
+    </script>
+</body>
+
+</html>

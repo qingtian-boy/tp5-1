@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>无标题文档</title>
+    <link href="{:config('static_admin')}/css/style.css" rel="stylesheet" type="text/css" />
+    <script language="JavaScript" src="{:config('static_admin')}/js/jquery.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/static/ueditor/ueditor.config.js?v=1"></script>
+    <script type="text/javascript" charset="utf-8" src="/static/ueditor/ueditor.all.min.js"> </script>
+    <!--建议手动加在语言，避免在ie下有时因为加载语言失败导致编辑器加载失败-->
+    <!--这里加载的语言文件会覆盖你在配置项目里添加的语言类型，比如你在配置项目里配置的是英文，这里加载的中文，那最后就是中文-->
+    <script type="text/javascript" charset="utf-8" src="/static/ueditor/lang/zh-cn/zh-cn.js"></script>
+    <style>
+        .active{
+            border-bottom: solid 3px #66c9f3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="place">
+        <span>位置：</span>
+        <ul class="placeul">
+            <li><a href="#">首页</a></li>
+            <li><a href="#">表单</a></li>
+        </ul>
+    </div>
+    <div class="formbody">
+        <div class="formtitle">
+            <span class="active">基本信息</span>
+            <span>商品属性信息</span>
+            <span>商品相册</span>
+            <span>商品描述</span>
+
+        </div>
+        <form action="" method="post" enctype="multipart/form-data">
+            <!-- 第一个选项卡 -->
+            <ul class="forminfo">
+                <li>
+                    <label>商品名称</label>
+                    <input name="goods_name" placeholder="请输入商品名称" type="text" class="dfinput" /><i></i>
+                </li>
+                <li>
+                    <label>商品价格</label>
+                    <input name="goods_price" placeholder="请输入商品价格" type="text" class="dfinput" /><i></i>
+                </li>
+                <li>
+                    <label>商品库存</label>
+                    <input name="goods_number" placeholder="请输入商品库存" type="text" class="dfinput" />
+                </li>
+                <li>
+                    <label>商品分类</label>
+                    <select name="cat_id" class='dfinput'>
+                        <option value=''>请选择商品分类</option>
+                        {foreach name="cats" item='v'}
+                            <option value="{$v['cat_id']}">{:str_repeat('&nbsp;&nbsp;',$v['level']*2)}{$v['cat_name']}</option>
+                        {/foreach}
+                    </select>
+                </li>
+                 <li>
+                    <label>回收站</label>
+                    <input type="radio" name="is_delete" value='1' > 是
+                    <input type="radio" name="is_delete" value='0' checked="checked"> 否
+                </li>
+                
+                <li>
+                    <label>上架</label>
+                    <input type="radio" name="is_sale" value='1' checked="checked"> 是
+                    <input type="radio" name="is_sale" value='0' > 否
+                </li>
+                <li>
+                    <label>新品</label>
+                    <input type="radio" name="is_new" value='1' checked="checked"> 是
+                    <input type="radio" name="is_new" value='0' > 否
+                </li>
+                <li>
+                    <label>热卖</label>
+                    <input type="radio" name="is_hot" value='1' checked="checked"> 是
+                    <input type="radio" name="is_hot" value='0' > 否
+                </li>
+                <li>
+                    <label>推荐</label>
+                    <input type="radio" name="is_best" value='1' checked="checked"> 是
+                    <input type="radio" name="is_best" value='0' > 否
+                </li>
+            </ul>
+
+            <!-- 第二个选项卡 -->
+            <ul class="forminfo">
+                <li>
+                    <label>商品类型</label>
+                    <select name="type_id" class="dfinput">
+                        <option value=''>请选择商品类型</option>
+                        {foreach name="types" item='v'}
+                            <option value="{$v['type_id']}">{$v['type_name']}</option>
+                        {/foreach}
+                    </select>
+                    <!-- 这里存储动态生成属性的容器 -->
+                    <li id="attrContainer">
+                        
+                    </li>
+                </li>
+            </ul>
+            
+            <!-- 第三个选项卡 -->
+            <ul class="forminfo">
+                <li><a href="javascript:;" onclick="cloneImg(this)">[+]</a>&nbsp;<input type="file" name="img[]">
+                </li>
+            </ul>
+
+            <!-- 第四个选项卡 -->
+            <ul class="forminfo">
+                <li>
+                    <label>商品描述</label>
+                    <textarea name="goods_desc" id="goods_desc"></textarea>
+                </li>
+            </ul>
+
+			<li>
+                <label>&nbsp;</label>
+                <input name="" id="btnSubmit" type="submit" class="btn" value="确认保存" />
+            </li>
+        </form>
+    </div>
+</body>
+<script>
+    //给商品类型的select绑定onchange事件
+    $("select[name='type_id']").change(function(){
+        var type_id = $(this).val(); //获取到类型的值
+        //为空不发ajax请求（无用请求）
+        if(type_id == ''){
+            //清空属性的容器
+            $("#attrContainer").html('');
+            return;
+        }
+        //发送ajax请求，获取类型下面对应的所有的属性
+        $.get("{:url('/admin/goods/getTypeAttr')}",{"type_id":type_id},function(res){
+            //res是服务端响应回来的值
+            console.log(res);
+            //所有的属性值都是一个li标签，都是被包含在一个ul中
+            var html = "";
+            html += "<ul>";
+                for(var i=0; i<res.length; i++){
+                    //拼接li标签
+                    html += "<li>";
+                    //1.只有单选属性才有[+]
+                    if(res[i].attr_type == 1){
+                        html += "<a href='javascript:;' onclick='cloneAttr(this)'>[+]</a>"
+                    }
+                    //2.拼接属性的名称
+                    html += res[i].attr_name + ':';
+                    //3.判断属性值录入方式attr_input_type 0-手工输入-input 1-列表选择-select
+                    //如果是单选属性name后面需要拼接[],因为单选属性有多个，而唯一属性只有一个，不需要加[]
+                    var hasManyValue = res[i].attr_type == 1 ? '[]' : '';
+                    if(res[i].attr_input_type == 0){
+                        //手工输入--->input框
+                        html += "<input type='text' name='attrValue["+res[i].attr_id+"]"+hasManyValue+"' class='dfinput' placeholder='属性值'/>"
+                        
+                    }else{
+                        //列表选择---->select
+                        html += "<select class='dfinput' name='attrValue["+ res[i].attr_id +"]"+hasManyValue+"'>";
+                        //需要使用|炸开属性值，拼接option标签
+                        var attr_values_arr = res[i].attr_values.split('|'); // 形如：[黑色，白色，土豪金]
+                        html += "<option value='' >请选择</option>";
+                        for(var j=0; j<attr_values_arr.length; j++){
+                           html += "<option value='"+ attr_values_arr[j] +"'>"+ attr_values_arr[j] +"</option>";
+                        }
+                        html += "</select>";
+                    }
+                    //4.单选属性需要拼接价格的input输入框
+                    if(res[i].attr_type == 1){
+                        html += "属性价格 <input type='text' name='attrPrice["+ res[i].attr_id+"][]' class='dfinput' placeholder='属性价格'>"
+                    }
+                    html += "</li>";
+                }
+            html += "</ul>";
+            //把最后组装的ul标签设置为id=attrContainer的内容
+            $("#attrContainer").html(html);
+
+        },'json');
+    });
+
+
+    //初始化富文本编辑器
+    //实例化编辑器
+    //建议使用工厂方法getEditor创建和引用编辑器实例，如果在某个闭包下引用该编辑器，直接调用UE.getEditor('editor')就能拿到相关的实例
+    var ue = UE.getEditor('goods_desc');
+    //单击事件克隆图片
+    function cloneImg(ele){
+        //获取当前a标签的内容
+        var html = $(ele).html(); 
+        if(html=='[+]'){
+            //克隆当前元素的父元素（li）
+            var newLi = $(ele).parent().clone();
+            //把克隆的元素li的内部子元素a的内容改为[-]
+            newLi.children('a').html('[-]');
+            //把克隆的newLi追加到当前父元素的后面
+            $(ele).parent().after(newLi);
+        }else{
+            //如果[-],则找到父元素并移除
+            $(ele).parent().remove();
+        }
+    }
+
+    //单击单选属性
+    function cloneAttr(ele){
+        //获取当前a标签的内容
+        var html = $(ele).html(); 
+        if(html=='[+]'){
+            //克隆当前元素的父元素（li）
+            var newLi = $(ele).parent().clone();
+            //把克隆的元素li的内部子元素a的内容改为[-]
+            newLi.children('a').html('[-]');
+           //把克隆的元素li的内部子元素input的内容设置为空
+            newLi.children('input').val('');
+            //把克隆的newLi追加到当前父元素的后面
+            $(ele).parent().after(newLi);
+        }else{
+            //如果[-],则找到父元素并移除
+            $(ele).parent().remove();
+        }
+    }
+
+
+    $(".formtitle span").click(function(event){
+        $(this).addClass('active').siblings("span").removeClass('active') ;
+        var index = $(this).index();
+        $("ul.forminfo").eq(index).show().siblings(".forminfo").hide();
+    });
+    $(".formtitle span").eq(0).click();
+</script>
+
+</html>

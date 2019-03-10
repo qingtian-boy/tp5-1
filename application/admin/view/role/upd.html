@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>无标题文档</title>
+    <link href="{:config('static_admin')}/css/style.css" rel="stylesheet" type="text/css" />
+    <script language="JavaScript" src="{:config('static_admin')}/js/jquery.js"></script>
+    <style>
+        .active{
+            border-bottom: solid 3px #66c9f3;
+        }
+        .box th, .box td{border: 1px solid #ccc;}
+        .box b{color:blue;}
+        li{list-style: none;}
+        .box .ul_f{float:left;} 
+        .box .son{padding-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="place">
+        <span>位置：</span>
+        <ul class="placeul">
+            <li><a href="#">首页</a></li>
+            <li><a href="#">表单</a></li>
+        </ul>
+    </div>
+    <div class="formbody">
+        <div class="formtitle">
+            <span class="active">基本信息</span>
+        </div>
+        <form action="" method="post">
+            <!-- 隐藏域 -->
+            <input type="hidden" name="role_id" value="{$roleData['role_id']}">
+            <ul class="forminfo">
+                <li>
+                    <label>角色名称</label>
+                    <input name="role_name" value="{$roleData['role_name']}" placeholder="请输入角色名称" type="text" class="dfinput" /><i></i>
+                </li>
+                <li>
+                    <!-- 下面的table表结构是从课件中复制过来的 -->
+                    <table width="600px" border="1px" rules="all" class="box">
+                        <!-- 循环顶级(1级)权限pid=0 -->
+                        {foreach name="children[0]" item='one'}
+                        <tr>
+                            <!-- this是当前标签input的dom对象 -->
+                            <th><input onclick="select_all(this)" value="{$one}" name="auth_ids_list[]"  type="checkbox" >{$auths[$one]['auth_name']}</th>
+                            <td>
+                                <!-- 循环二级权限 -->
+                                {foreach name="children[ $one ]" item="two"}
+                                <ul class="ul_f">
+                                    <b><input  onclick="select_all(this);select_up('{$one}')" name="auth_ids_list[]"  value="{$two}"  type="checkbox" >{$auths[$two]['auth_name']}</b>
+                                    <ul>
+                                        <!-- 循环三级 -->
+                                        {foreach name="children[ $two ]" item="three"}
+                                        <li class="son"><input onclick="select_up('{$one},{$two}')" name="auth_ids_list[]" value="{$three}" type="checkbox" >{$auths[$three][auth_name]}</li>
+                                        {/foreach}
+                                    </ul>
+                                </ul>
+                                {/foreach}
+                            </td>
+                        </tr>
+                        {/foreach}
+                    </table>
+                </li>
+            </ul>
+            
+			<li>
+                    <label>&nbsp;</label>
+                    <input name="" id="btnSubmit" type="submit" class="btn" value="确认保存" />
+            </li>
+        </form>
+    </div>
+</body>
+<script>
+    var auth_ids_list = "{$roleData['auth_ids_list']}";
+    console.log(auth_ids_list);
+    var arr = auth_ids_list.split(','); //把字符串变成数组
+    //把当前角色已有的权限默认选中
+    // $("input[type='checkbox']").val([6,7,8]);
+    $("input[type='checkbox']").val(arr);
+   //单击父权限，把所有的子孙权限要全部选中或不选中
+   function select_all(ele){
+        //ele 是当前元素的dom对象
+        console.log('选中状态：');
+        console.log(ele.checked);
+        $(ele).parent().next().find('input').attr('checked',ele.checked);
+   }
+
+   //点击子级权限，让祖先权限默认选中
+   function select_up(auth_ids){
+        // '1'  ,  '1,2'   =>  [1]   [1,2]
+        //把字符串通过js的split函数变成一个数组
+        var arr = auth_ids.split(',') ;
+        for(var i=0; i<arr.length; i++){
+            //标签加属性组合选择器 $(ele[属性名1='值1'][属性名2='值2'])
+            $("input[type='checkbox'][value='"+arr[i]+"']").attr('checked',true);
+        }
+        // $("input[type='checkbox'][value='1']").attr('checked',true);
+        // $("input[type='checkbox'][value='2']").attr('checked',true);
+   }
+</script>
+
+</html>

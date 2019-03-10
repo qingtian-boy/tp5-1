@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<form action="import.php" method="post" enctype="multipart/form-data">
+		请上传excel文件： <input type="file" name="excel">
+		<input type="submit" name="" value='上传'>
+	</form>
+
+	<hr>
+
+	<button id="btn">导出用户数据到excel表</button>
+</body>
+<script type="text/javascript">
+	document.getElementById('btn').onclick = function(){
+		location.href = "export.php";
+	}
+</script>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>无标题文档</title>
+    <link href="{:config('static_admin')}/css/style.css" rel="stylesheet" type="text/css" />
+    <link href="{:config('static_admin')}/css/page.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="{:config('static_admin')}/js/jquery.js"></script>
+    <script type="text/javascript" src="/static/layer/layer.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $(".click").click(function() {
+            $(".tip").fadeIn(200);
+        });
+
+        $(".tiptop a").click(function() {
+            $(".tip").fadeOut(200);
+        });
+
+        $(".sure").click(function() {
+            $(".tip").fadeOut(100);
+        });
+
+        $(".cancel").click(function() {
+            $(".tip").fadeOut(100);
+        });
+
+    });
+    </script>
+</head>
+
+<body>
+    <div class="place">
+        <span>位置：</span>
+        <ul class="placeul">
+            <li><a href="#">首页</a></li>
+            <li><a href="#">数据表</a></li>
+            <li><a href="#">基本内容</a></li>
+        </ul>
+    </div>
+    <div class="rightinfo">
+        <div class="tools">
+            <ul class="toolbar">
+                <li><span><img src="{:config('static_admin')}/images/t01.png" /></span>添加</li>
+                <li><span><img src="{:config('static_admin')}/images/t02.png" /></span>修改</li>
+                <li><span><img src="{:config('static_admin')}/images/t03.png" /></span>删除</li>
+                <li><span><img src="{:config('static_admin')}/images/t04.png" /></span>统计</li>
+            </ul>
+        </div>
+        <table class="tablelist">
+            <thead>
+                <tr>
+                    <th>
+                        <input name="" type="checkbox" value="" id="checkAll" />
+                    </th>
+                    <th>订单号</th>
+                    <th>收货信息</th>
+                    <th>总金额</th>
+                    <th>付款状态</th>
+                    <th>发货状态</th>
+                    <th>订单时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {foreach name="order" item="v"}
+                <tr>
+                    <td>
+                        <input name="" type="checkbox" value="" />
+                    </td>
+                    <td>{$v['order_id']}</td>
+                    <td>{$v['address']}/{$v['receiver']}/{$v['phone']}</td>
+                    <td>{$v['total_price']}</td>
+                    <td>{:config('pay_status')[$v['pay_status']]}</td>
+                    <td>{:config('send_status')[$v['send_status']]}</td>
+                    <td>{$v['create_time']}</td> 
+                    <td>
+                        <!-- 只有付款（pay_status=1）且未发货（send_status=0）的订单才可以分配物流信息 -->
+                        <a style='display: none' href="{:url('/admin/order/upd',['order_id'=>$v['order_id']])}" send_status="{$v['send_status']}" pay_status="{$v['pay_status']}" class="tablelink">分配物流信息</a> 
+                        
+                        <!-- 只有已发货(send_status = 1)的订单才可以查看物流信息 -->
+                        <?php if($v['send_status'] == 1): ?>
+                        <a  href="javascript:;" company="{$v['company']}" number="{$v['number']}"  class="tablelink showWuliu" >查看物流</a>
+                        <?php endif;?>
+                    </td>
+                </tr>
+                {/foreach}
+                
+            </tbody>
+        </table>
+
+        <!-- 分页页码 -->
+        <div class="pagination">
+        </div>
+
+
+
+        <div class="tip">
+            <div class="tiptop"><span>提示信息</span>
+                <a></a>
+            </div>
+            <div class="tipinfo">
+                <span><img src="{:config('static_admin')}/images/ticon.png" /></span>
+                <div class="tipright">
+                    <p>是否确认对信息的修改 ？</p>
+                    <cite>如果是请点击确定按钮 ，否则请点取消。</cite>
+                </div>
+            </div>
+            <div class="tipbtn">
+                <input name="" type="button" class="sure" value="确定" />&nbsp;
+                <input name="" type="button" class="cancel" value="取消" />
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        //ajax查看物流信息，使用layer弹层进行展示信息
+        $(".showWuliu").click(function(){
+            //获取物流公司和物流运单号
+            var company = $(this).attr('company');
+            var number = $(this).attr('number');
+            $.get("{:url('/admin/order/getWuliu')}",{"company":company,"number":number},function(res){
+                console.log(res);
+                //接口res返回的实质是一个url地址，需要把url地址作为iframe的src属性，即可以查看到物流信息
+                //这里推荐使用layer的iframe层来实现
+                //iframe层
+                layer.open({
+                  type: 2,
+                  title: '物流信息',
+                  shadeClose: true,
+                  shade: 0.8,
+                  area: ['800px', '70%'],
+                  content: res //iframe的url
+                });
+            },'text');
+        });
+
+
+        //设置物流信息操作
+        $("a[pay_status=1][send_status=0]").show();
+        
+        
+        $('.tablelist tbody tr:odd').addClass('odd');
+    </script>
+</body>
+
+</html>
